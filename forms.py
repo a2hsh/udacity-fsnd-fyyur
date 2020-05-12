@@ -1,220 +1,131 @@
 from datetime import datetime
 from flask_wtf import Form
-from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
-from wtforms.validators import DataRequired, AnyOf, URL
+from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField, TextAreaField
+from wtforms.validators import ValidationError, DataRequired, Length, AnyOf, URL, InputRequired, optional
+from enums import State, Genre
+
+
+class ValidateValues(object):
+    def __init__(self, values, message=None):
+        self.values = values
+        if not message:
+            message = u'Values must be one of: {0}.'.format(
+                ','.join(self.values))
+        self.message = message
+
+    def __call__(self, form, field):
+        error = False
+        for value in field.data:
+            if value not in self.values:
+                error = True
+        if error:
+            raise ValidationError(self.message)
+
+
+ValidateValues = ValidateValues
+
 
 class ShowForm(Form):
-    artist_id = StringField(
-        'artist_id'
-    )
-    venue_id = StringField(
-        'venue_id'
-    )
+    artist_id = SelectField('Select artist', coerce=int, validators=[
+                            InputRequired(message='Please choose the artist')])
+    venue_id = SelectField('Select venue', coerce=int, validators=[
+                           InputRequired(message='Please choose the venue')])
     start_time = DateTimeField(
-        'start_time',
+        'Start time',
         validators=[DataRequired()],
-        default= datetime.today()
+        default=datetime.today()
     )
+
 
 class VenueForm(Form):
     name = StringField(
-        'name', validators=[DataRequired()]
+        'Venue name', validators=[DataRequired(message='Please enter a venue name'), Length(min=2, max=50)]
     )
     city = StringField(
-        'city', validators=[DataRequired()]
+        'City', validators=[DataRequired('Please enter the venue\'s city'), Length(min=2, max=50)]
     )
     state = SelectField(
-        'state', validators=[DataRequired()],
-        choices=[
-            ('AL', 'AL'),
-            ('AK', 'AK'),
-            ('AZ', 'AZ'),
-            ('AR', 'AR'),
-            ('CA', 'CA'),
-            ('CO', 'CO'),
-            ('CT', 'CT'),
-            ('DE', 'DE'),
-            ('DC', 'DC'),
-            ('FL', 'FL'),
-            ('GA', 'GA'),
-            ('HI', 'HI'),
-            ('ID', 'ID'),
-            ('IL', 'IL'),
-            ('IN', 'IN'),
-            ('IA', 'IA'),
-            ('KS', 'KS'),
-            ('KY', 'KY'),
-            ('LA', 'LA'),
-            ('ME', 'ME'),
-            ('MT', 'MT'),
-            ('NE', 'NE'),
-            ('NV', 'NV'),
-            ('NH', 'NH'),
-            ('NJ', 'NJ'),
-            ('NM', 'NM'),
-            ('NY', 'NY'),
-            ('NC', 'NC'),
-            ('ND', 'ND'),
-            ('OH', 'OH'),
-            ('OK', 'OK'),
-            ('OR', 'OR'),
-            ('MD', 'MD'),
-            ('MA', 'MA'),
-            ('MI', 'MI'),
-            ('MN', 'MN'),
-            ('MS', 'MS'),
-            ('MO', 'MO'),
-            ('PA', 'PA'),
-            ('RI', 'RI'),
-            ('SC', 'SC'),
-            ('SD', 'SD'),
-            ('TN', 'TN'),
-            ('TX', 'TX'),
-            ('UT', 'UT'),
-            ('VT', 'VT'),
-            ('VA', 'VA'),
-            ('WA', 'WA'),
-            ('WV', 'WV'),
-            ('WI', 'WI'),
-            ('WY', 'WY'),
-        ]
+        'State', validators=[DataRequired(message='Please select the venue\'s state'), Length(min=2, max=50), AnyOf([choice.value for choice in State])],
+        choices=State.choices()
     )
     address = StringField(
-        'address', validators=[DataRequired()]
+        'Address', validators=[DataRequired(message='Please enter the venue\'s address'), Length(min=10, max=120)]
     )
     phone = StringField(
-        'phone'
+        'Phone Number'
     )
     image_link = StringField(
-        'image_link'
+        'Image link'
     )
     genres = SelectMultipleField(
-        # TODO implement enum restriction
-        'genres', validators=[DataRequired()],
-        choices=[
-            ('Alternative', 'Alternative'),
-            ('Blues', 'Blues'),
-            ('Classical', 'Classical'),
-            ('Country', 'Country'),
-            ('Electronic', 'Electronic'),
-            ('Folk', 'Folk'),
-            ('Funk', 'Funk'),
-            ('Hip-Hop', 'Hip-Hop'),
-            ('Heavy Metal', 'Heavy Metal'),
-            ('Instrumental', 'Instrumental'),
-            ('Jazz', 'Jazz'),
-            ('Musical Theatre', 'Musical Theatre'),
-            ('Pop', 'Pop'),
-            ('Punk', 'Punk'),
-            ('R&B', 'R&B'),
-            ('Reggae', 'Reggae'),
-            ('Rock n Roll', 'Rock n Roll'),
-            ('Soul', 'Soul'),
-            ('Other', 'Other'),
-        ]
+        'Genres', validators=[DataRequired(), Length(max=150), ValidateValues([choice.value for choice in Genre])],
+        choices=Genre.choices()
+    )
+    website = StringField(
+        'Website', validators=[optional(strip_whitespace=False), URL(message='Please enter a valid URL'), Length(min=10, max=120)]
     )
     facebook_link = StringField(
-        'facebook_link', validators=[URL()]
+        'Facebook link', validators=[optional(strip_whitespace=False), URL(message='Please enter a valid URL'), Length(min=15, max=120)]
     )
+    seeking_talent = BooleanField(
+        'Looking for artists'
+    )
+    seeking_description = TextAreaField(
+        'Description for artists', validators=[Length(max=500)]
+    )
+
 
 class ArtistForm(Form):
     name = StringField(
-        'name', validators=[DataRequired()]
+        'Artist name', validators=[DataRequired(message='Please enter an artist name'), Length(min=2, max=50)]
     )
     city = StringField(
-        'city', validators=[DataRequired()]
+        'City', validators=[DataRequired('Please enter the artist\'s city'), Length(min=2, max=50)]
     )
     state = SelectField(
-        'state', validators=[DataRequired()],
-        choices=[
-            ('AL', 'AL'),
-            ('AK', 'AK'),
-            ('AZ', 'AZ'),
-            ('AR', 'AR'),
-            ('CA', 'CA'),
-            ('CO', 'CO'),
-            ('CT', 'CT'),
-            ('DE', 'DE'),
-            ('DC', 'DC'),
-            ('FL', 'FL'),
-            ('GA', 'GA'),
-            ('HI', 'HI'),
-            ('ID', 'ID'),
-            ('IL', 'IL'),
-            ('IN', 'IN'),
-            ('IA', 'IA'),
-            ('KS', 'KS'),
-            ('KY', 'KY'),
-            ('LA', 'LA'),
-            ('ME', 'ME'),
-            ('MT', 'MT'),
-            ('NE', 'NE'),
-            ('NV', 'NV'),
-            ('NH', 'NH'),
-            ('NJ', 'NJ'),
-            ('NM', 'NM'),
-            ('NY', 'NY'),
-            ('NC', 'NC'),
-            ('ND', 'ND'),
-            ('OH', 'OH'),
-            ('OK', 'OK'),
-            ('OR', 'OR'),
-            ('MD', 'MD'),
-            ('MA', 'MA'),
-            ('MI', 'MI'),
-            ('MN', 'MN'),
-            ('MS', 'MS'),
-            ('MO', 'MO'),
-            ('PA', 'PA'),
-            ('RI', 'RI'),
-            ('SC', 'SC'),
-            ('SD', 'SD'),
-            ('TN', 'TN'),
-            ('TX', 'TX'),
-            ('UT', 'UT'),
-            ('VT', 'VT'),
-            ('VA', 'VA'),
-            ('WA', 'WA'),
-            ('WV', 'WV'),
-            ('WI', 'WI'),
-            ('WY', 'WY'),
-        ]
+        'State', validators=[DataRequired(message='Please select the artist\'s state'), Length(min=2, max=50), AnyOf([choice.value for choice in State])],
+        choices=State.choices()
     )
     phone = StringField(
-        # TODO implement validation logic for state
-        'phone'
+        'Phone Number'
     )
     image_link = StringField(
-        'image_link'
+        'Image link'
     )
     genres = SelectMultipleField(
-        # TODO implement enum restriction
-        'genres', validators=[DataRequired()],
-        choices=[
-            ('Alternative', 'Alternative'),
-            ('Blues', 'Blues'),
-            ('Classical', 'Classical'),
-            ('Country', 'Country'),
-            ('Electronic', 'Electronic'),
-            ('Folk', 'Folk'),
-            ('Funk', 'Funk'),
-            ('Hip-Hop', 'Hip-Hop'),
-            ('Heavy Metal', 'Heavy Metal'),
-            ('Instrumental', 'Instrumental'),
-            ('Jazz', 'Jazz'),
-            ('Musical Theatre', 'Musical Theatre'),
-            ('Pop', 'Pop'),
-            ('Punk', 'Punk'),
-            ('R&B', 'R&B'),
-            ('Reggae', 'Reggae'),
-            ('Rock n Roll', 'Rock n Roll'),
-            ('Soul', 'Soul'),
-            ('Other', 'Other'),
-        ]
+        'Genres', validators=[DataRequired(), Length(max=150), ValidateValues([choice.value for choice in Genre])],
+        choices=Genre.choices()
+    )
+    website = StringField(
+        'Website', validators=[optional(strip_whitespace=False), URL(message='Please enter a valid URL'), Length(min=10, max=120)]
     )
     facebook_link = StringField(
-        # TODO implement enum restriction
-        'facebook_link', validators=[URL()]
+        'Facebook link', validators=[optional(strip_whitespace=False), URL(message='Please enter a valid URL'), Length(min=15, max=120)]
     )
-
-# TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
+    seeking_venue = BooleanField(
+        'Available to Venues'
+    )
+    seeking_description = TextAreaField(
+        'Description for venues', validators=[Length(max=500)]
+    )
+    monday = BooleanField(
+        'Monday', default='checked'
+    )
+    tuesday = BooleanField(
+        'Tuesday', default='checked'
+    )
+    wednesday = BooleanField(
+        'Wednesday', default='checked'
+    )
+    thursday = BooleanField(
+        'Thursday', default='checked'
+    )
+    friday = BooleanField(
+        'Friday', default='checked'
+    )
+    saturday = BooleanField(
+        'Saturday', default='checked'
+    )
+    sunday = BooleanField(
+        'Sunday', default='checked'
+    )
