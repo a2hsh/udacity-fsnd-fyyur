@@ -37,8 +37,8 @@ class Artist(db.Model):
     sunday = db.Column(db.Boolean, nullable=False,
                        default=True, server_default='true')
     venues = db.relationship('Venue', secondary='shows',
-                             backref='artists', lazy=True)
-    shows = db.relationship('Show', backref='artists',
+                             backref='artist', lazy=True)
+    shows = db.relationship('Show', backref='artist',
                             lazy=True, cascade='all, delete-orphan', passive_deletes=True)
 
     def dict(self):
@@ -56,16 +56,16 @@ class Artist(db.Model):
             'seeking_description': self.seeking_description,
         }
 
-    def on(self, date):
+    def availableOn(self, date):
         weekDays = ('monday', 'tuesday', 'wednesday',
                     'thursday', 'friday', 'saturday', 'sunday')
         weekDate = date.weekday()
         weekDateStr = weekDays[weekDate]
         checkDate = getattr(self, weekDateStr)
         if checkDate:
-            return True
+            return True, weekDateStr
         else:
-            return False
+            return False, weekDateStr
 
 
 class Venue(db.Model):
@@ -83,7 +83,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(
         db.Boolean, nullable=False, default=False, server_default='false')
     seeking_description = db.Column(db.String(500))
-    shows = db.relationship('Show', backref='venues',
+    shows = db.relationship('Show', backref='venue',
                             lazy=True, cascade='all, delete-orphan', passive_deletes=True)
 
     def dict(self):

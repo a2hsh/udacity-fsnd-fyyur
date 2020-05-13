@@ -1,8 +1,10 @@
 from datetime import datetime
+from sqlalchemy import cast, Date
 from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField, TextAreaField
 from wtforms.validators import ValidationError, DataRequired, Length, AnyOf, URL, InputRequired, optional
 from enums import State, Genre
+from models import Show, Artist
 
 
 class ValidateValues(object):
@@ -22,7 +24,53 @@ class ValidateValues(object):
             raise ValidationError(self.message)
 
 
-ValidateValues = ValidateValues
+validateValues = ValidateValues
+
+
+class Available:
+    """
+    Compares the values of two fields.
+
+    :param fieldname:
+        The name of the other field to compare to.
+    :param message:
+        Error message to raise in case of a validation error. Can be
+        interpolated with `%(other_label)s` and `%(other_name)s` to provide a
+        more helpful error.
+    """
+
+    def __init__(self, fieldname, past_message=None, booked_message=None, unavailable_message=None):
+        self.fieldname = fieldname
+        self.past_message = past_message
+        self.booked_message = booked_message
+        self.unavailable_message = unavailable_message
+
+    def __call__(self, form, field):
+        try:
+            id = form[self.fieldname]
+        except KeyError:
+            raise ValidationError(
+                field.gettext("Invalid field name '%s'.") % self.fieldname
+            )
+        if field.data < datetime.now():
+            message = self.past_message
+            if message is None:
+                message = 'The date you specified is in the past.'
+            raise ValidationError(message)
+        show = Show.query.filter(
+            Show.artist_id == id.data).filter(cast(Show.start_time, Date) == field.data.date()).first()
+        if show:
+            message = self.booked_message
+            if message is None:
+                message = f'{show.artist.name} is already booked on the specified date'
+            raise ValidationError(message)
+        artist = Artist.query.get(id.data)
+        date, str = artist.availableOn(field.data)
+        if not date:
+            message = self.unavailable_message
+            if message is None:
+                message = f'{artist.name} is not available on {str}s.'
+            raise ValidationError(message)
 
 
 class ShowForm(Form):
@@ -32,8 +80,8 @@ class ShowForm(Form):
                            InputRequired(message='Please choose the venue')])
     start_time = DateTimeField(
         'Start time',
-        validators=[DataRequired()],
-        default=datetime.today()
+        validators=[DataRequired(), Available('artist_id')],
+        default=datetime.now()
     )
 
 

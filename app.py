@@ -1,4 +1,3 @@
-# Note: Don't forget to close all db sessions.
 #----------------------------------------------------------------------------#
 # Imports
 #----------------------------------------------------------------------------#
@@ -443,9 +442,9 @@ def create_show_submission():
     if form.validate_on_submit():
         try:
             show = Show()
-
+            form.populate_obj(show)
             db.session.add(show)
-            # db.session.commit()
+            db.session.commit()
         except:
             error = True
             db.session.rollback()
@@ -453,11 +452,11 @@ def create_show_submission():
         finally:
             db.session.close()
             if error:
-                flash('Oops! Something wrong happened, venue ' +
-                      str(form.name.data) + ' could not be listed!', 'error')
+                flash(
+                    'Oops! Something wrong happened, your show could not be listed!', 'error')
             else:
                 flash(
-                    'Venue ' + str(form.name.data) + ' was listed successfully!')
+                    'Your show was listed successfully!')
             return render_template('pages/home.html')
     return render_template('forms/new_show.html', form=form)
 
