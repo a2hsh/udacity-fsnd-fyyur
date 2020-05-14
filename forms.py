@@ -1,13 +1,22 @@
 from datetime import datetime
 from sqlalchemy import cast, Date
 from flask_wtf import Form
-from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField, TextAreaField
+from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField, TextAreaField, SubmitField
 from wtforms.validators import ValidationError, DataRequired, Length, AnyOf, URL, InputRequired, optional
 from enums import State, Genre
 from models import Show, Artist
 
 
 class ValidateValues(object):
+    """
+    Compares the values of the fields to an enum.
+
+    :param values:
+        enum of values to compair to.
+    :param message:
+        Error message to raise in case of a validation error.
+    """
+
     def __init__(self, values, message=None):
         self.values = values
         if not message:
@@ -24,19 +33,18 @@ class ValidateValues(object):
             raise ValidationError(self.message)
 
 
-validateValues = ValidateValues
-
-
 class Available:
     """
     Compares the values of two fields.
 
     :param fieldname:
-        The name of the other field to compare to.
-    :param message:
-        Error message to raise in case of a validation error. Can be
-        interpolated with `%(other_label)s` and `%(other_name)s` to provide a
-        more helpful error.
+        The name of the artist id field to check availability.
+    :param past_message:
+        Error message to raise in case if the show is in the past.
+    :param booked_message:
+        Error message to raise in case if the artist is booked at the specified date.
+    :param unavailable_message:
+    Error message to raise in case if the artist is unavailable at the specified date.
     """
 
     def __init__(self, fieldname, past_message=None, booked_message=None, unavailable_message=None):
