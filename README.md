@@ -99,7 +99,7 @@ you can also run a local virtual environment using pipenv:
 $ pip3 install pipenv
 $ cd PROJECT_DIRECTORY_PATH/
 $ pipenv shell
-$ pip3 install # installing dependencies
+$ pipenv install # installing dependencies
 ```
 pipenv will install all required dependencies for you.
 
@@ -107,10 +107,10 @@ pipenv will install all required dependencies for you.
 before running the application, you should create a database, and set the credentials in the `config.py` file.
 After that, run the flask migration tool to create the application database schema.
 ```
-$ flask db migrate
+$ flask db upgrade
 ```
 
-# to do:
+### to do:
 A few things I want to follow up on with this project:
 1. Better time availability implementation.
 2. User management for artists and venues.

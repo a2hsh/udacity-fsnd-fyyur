@@ -168,8 +168,8 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-    # query all artists
-    data = Artist.query.all()
+    # query all artists, ordered by names.
+    data = Artist.query.order_by(Artist.name).all()
     return render_template('pages/artists.html', artists=data)
 
 
